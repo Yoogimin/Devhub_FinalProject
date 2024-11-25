@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta content="IE=edge" http-equiv="X-UA-Compatible">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>HTML/CSS 편집기</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/theme/material-darker.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap" rel="stylesheet">
+    <link href="/images/favicon.svg" rel="shortcut icon" type="images/x-icon">
+    <link href="/libs/remixicon/fonts/remixicon.css" rel="stylesheet">
+    <link href="/libs/swiper/swiper-bundle.css" rel="stylesheet">
+    <link href="/libs/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/style.min.css" rel="stylesheet">
+    <link href="/css/header.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/chat.css}">
+    <link href="/css/coding/coding.css" rel="stylesheet">
+
+</head>
+<body>
+<!-- 헤더 바 시작 -->
+<th:block th:replace="~{body/header :: header}"></th:block>
+<!-- 헤더 바 끝 -->
+
+<section class="code-vd">
+    <div id="editor-container">
+        <div class="output-section">
+            <div class="controls" id="controls-container">
+                <div class="color-display" id="color-value">#e8e8e8</div>
+                <div class="toggle-container">
+                    <label class="toggle-switch">
+                        <input id="dark-mode-toggle" type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <input id="color-picker" type="color" value="#e8e8e8">
+            </div>
+            <iframe class="output" id="output"></iframe>
+        </div>
+        <div class="editor-section">
+            <div class="editor-tabs">
+                <button class="tab-btn active" onclick="openTab(event, 'html-editor')">HTML</button>
+                <button class="tab-btn" onclick="openTab(event, 'css-editor')">CSS</button>
+            </div>
+            <div class="editor active" id="html-editor">
+                <textarea id="html-code"></textarea>
+                <button class="copy-button" onclick="copyToClipboard('html')">📋 Copy</button>
+            </div>
+            <div class="editor" id="css-editor">
+                <textarea id="css-code"></textarea>
+                <button class="copy-button" onclick="copyToClipboard('css')">📋 Copy</button>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- 푸터 바 시작 -->
+<th:block th:replace="~{body/footer :: footer}"></th:block>
+<!-- 푸터 바 끝 -->
+<!-- 채팅 시작 -->
+<div th:replace="~{body/chat :: chat}"></div>
+<!-- 채팅 끝 -->
+
+<script src="/libs/bootstrap/js/bootstrap.bundle.min.js"></script>
+<script src="/libs/swiper/swiper-bundle.min.js"></script>
+<script src="/js/swiper.js"></script>
+<script src="/js/app.js" type="module"></script>
+<script crossorigin="anonymous" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" src="https://code.jquery.com/jquery-3.7.1.js"></script>
+
+<!-- 채팅 시작 -->
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/sockjs/1.0.2/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script src="https://cdn.lordicon.com/lordicon.js"></script>
+<script src="/js/chat.js"></script>
+<!-- 채팅 끝 -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/mode/css/css.min.js"></script>
+<script>
+    const darkModeToggle = document.getElementById('dark-mode-toggle');
+    const colorPicker = document.getElementById('color-picker');
+    const colorValueDisplay = document.getElementById('color-value');
+    const outputSection = document.querySelector('.output-section');
+    const controlsContainer = document.getElementById('controls-container');
+
+    let isDarkMode = false;
+    let currentColor = '#e8e8e8';
+
+    // 다크 모드 토글 이벤트 핸들러
+    darkModeToggle.addEventListener('change', function () {
+        isDarkMode = darkModeToggle.checked;
+        if (isDarkMode) {
+            currentColor = colorPicker.value;
+            colorValueDisplay.textContent = '#212121';
+            controlsContainer.style.backgroundColor = '#212121';
+            colorValueDisplay.style.color = '#fff';
+            outputSection.style.backgroundColor = '#212121';
+            colorPicker.value = '#212121';
+        } else {
+            colorValueDisplay.textContent = '#e8e8e8';
+            controlsContainer.style.backgroundColor = '#e8e8e8';
+            colorValueDisplay.style.color = '#000';
+            outputSection.style.backgroundColor = '#e8e8e8';
+            colorPicker.value = '#e8e8e8';
+        }
+    });
+
+    // 색상 선택기 이벤트 핸들러
+    colorPicker.addEventListener('input', function (event) {
+        const color = event.target.value;
+        outputSection.style.backgroundColor = color;
+        controlsContainer.style.backgroundColor = color;
+        colorValueDisplay.textContent = color;
+        colorValueDisplay.style.color = isDark(color) ? '#fff' : '#000';
+        colorValueDisplay.style.borderColor = isDark(color) ? '#fff' : '#000';
+        currentColor = color;
+    });
+
+    // 색상의 밝기를 판단하는 함수
+    function isDark(color) {
+        const r = parseInt(color.substr(1, 2), 16);
+        const g = parseInt(color.substr(3, 2), 16);
+        const b = parseInt(color.substr(5, 2), 16);
+        const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+        return brightness < 128;
+    }
+
+    // HTML 코드 에디터 설정
+    let htmlEditor = CodeMirror.fromTextArea(document.getElementById('html-code'), {
+        mode: 'xml',
+        lineNumbers: true,
+        theme: 'material-darker',
+        lineWrapping: true
+    });
+
+    // CSS 코드 에디터 설정
+    let cssEditor = CodeMirror.fromTextArea(document.getElementById('css-code'), {
+        mode: 'css',
+        lineNumbers: true,
+        theme: 'material-darker',
+        lineWrapping: true
+    });
+
+    // 탭 전환 함수
+    function openTab(evt, editorId) {
+        var i, tabcontent, tablinks;
+        tabcontent = document.getElementsByClassName("editor");
+        for (i = 0; i < tabcontent.length; i++) {
+            tabcontent[i].classList.remove("active");
+        }
+        tablinks = document.getElementsByClassName("tab-btn");
+        for (i = 0; i < tablinks.length; i++) {
+            tablinks[i].classList.remove("active");
+        }
+        document.getElementById(editorId).classList.add("active");
+        evt.currentTarget.classList.add("active");
+    }
+
+    // 출력 업데이트 함수
+    function updateOutput() {
+        let htmlContent = htmlEditor.getValue();
+        let cssContent = "<style>" + cssEditor.getValue() + "</style>";
+        let outputFrame = document.getElementById('output').contentWindow.document;
+
+        outputFrame.open();
+        outputFrame.write(htmlContent + cssContent);
+        outputFrame.close();
+
+        let outputBody = outputFrame.body;
+        outputBody.style.display = 'flex';
+        outputBody.style.justifyContent = 'center';
+        outputBody.style.alignItems = 'center';
+        outputBody.style.height = '100%';
+        outputBody.style.margin = '0';
+    }
+
+    htmlEditor.on('change', updateOutput);
+    cssEditor.on('change', updateOutput);
+
+    updateOutput();
+
+    // 클립보드 복사 함수
+    function copyToClipboard(editor) {
+        let text;
+        if (editor === 'html') {
+            text = htmlEditor.getValue();
+        } else if (editor === 'css') {
+            text = cssEditor.getValue();
+        }
+        navigator.clipboard.writeText(text).then(() => {
+            const copyButton = editor === 'html' ? document.querySelector('#html-editor .copy-button') : document.querySelector('#css-editor .copy-button');
+            copyButton.classList.add('copied');
+            copyButton.innerHTML = '<i class="ri-check-line icon"></i><span>Copied</span>';
+
+            setTimeout(() => {
+                copyButton.classList.remove('copied');
+                copyButton.innerHTML = '<i class="ri-clipboard-line icon"></i><span>Copy</span>';
+            }, 2000);
+        }).catch(err => {
+            alert('Failed to copy: ', err);
+        });
+    }
+</script>
+</body>
+</html>

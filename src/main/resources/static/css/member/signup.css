@@ -1,0 +1,84 @@
+.fade-out {
+    animation: fadeOut 1s forwards;
+}
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 1s forwards;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+#verification-code-group {
+    display: none;
+    opacity: 0;
+    transition: opacity 1s;
+}
+
+#verification-code-group.show {
+    display: block;
+    opacity: 1;
+}
+
+#second-form-container,
+#third-form-container {
+    display: none;
+}
+
+.alertMessage {
+    display: none;
+    margin-top: 1rem;
+}
+
+.valid-message {
+    color: green;
+}
+
+.error-message {
+    color: red;
+}
+
+.input-valid {
+    border-color: blue;
+}
+
+.input-error {
+    border-color: red;
+}
+
+.btn-check {
+    background-color: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+}
+
+.btn-check .ri-check-line {
+    font-size: 1.5rem;
+    color: gray;
+}
+
+.btn-check.valid .ri-check-line {
+    color: green;
+}
+
+.btn-check.invalid .ri-check-line {
+    color: red;
+}
